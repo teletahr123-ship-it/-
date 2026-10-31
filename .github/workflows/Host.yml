@@ -1,0 +1,35 @@
+name: Host Bot
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # كل 6 ساعات
+  workflow_dispatch:         # تشغيل يدوي من تبويب Actions
+
+# تشغيلة واحدة فقط في نفس الوقت (الجديدة تنتظر انتهاء القديمة)
+concurrency:
+  group: host-bot
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 358
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - name: Pre-pull python image
+        run: docker pull python:3.12-slim
+
+      - name: Run host
+        run: python host.py
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          BACKUP_CHANNEL: ${{ secrets.BACKUP_CHANNEL }}
+          ADMIN_ID: ${{ secrets.ADMIN_ID }}
+          RUN_MINUTES: "350"
